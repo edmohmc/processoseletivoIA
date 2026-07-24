@@ -13,7 +13,6 @@ import tensorflow as tf
 
 N_SAMPLES = 5
 
-
 def main():
     import os
     script_dir = os.path.dirname(os.path.abspath(__file__))
