@@ -1,7 +1,12 @@
 import os
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+
+try:
+    import tf_keras as keras
+    from tf_keras import layers
+except ImportError:
+    from tensorflow import keras
+    from tensorflow.keras import layers
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -117,6 +122,7 @@ print(f"\nAcurácia final de validação: {best_val_acc:.4f}")
 # Salvamento do modelo
 # ==========================
 
-model.save("model.h5")
+model_path = os.path.join(script_dir, "model.h5")
+model.save(model_path)
 
-print("\nModelo salvo como 'model.h5'")
+print(f"\nModelo salvo como '{model_path}'")
