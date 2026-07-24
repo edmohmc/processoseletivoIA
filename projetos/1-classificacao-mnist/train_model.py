@@ -117,7 +117,6 @@ print(f"\nAcurácia final de validação: {best_val_acc:.4f}")
 # Salvamento do modelo
 # ==========================
 
-model_path = os.path.join(script_dir, "model.h5")
-model.save(model_path)
+model.save("model.h5")
 
-print(f"\nModelo salvo como '{model_path}'")
+print("\nModelo salvo como 'model.h5'")

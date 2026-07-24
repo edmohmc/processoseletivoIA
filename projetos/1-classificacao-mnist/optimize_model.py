@@ -12,9 +12,6 @@ import os
 #   4. Salvar o resultado como "model.tflite"
 # ---------------------------------------------------------------------------
 
-import os
-import tensorflow as tf
-
 script_dir = os.path.dirname(os.path.abspath(__file__))
 h5_path = os.path.join(script_dir, "model.h5")
 tflite_path = os.path.join(script_dir, "model.tflite")
