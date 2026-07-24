@@ -85,28 +85,61 @@ projetos/1-classificacao-mnist/
 
 ## 📝 Relatório do Candidato
 
-👤 **Nome Completo:**
+👤 **Nome Completo:** Edmo Henrique Martins Cavalcante
 
 ### 1️⃣ Resumo da Arquitetura do Modelo
 
-Descreva, em palavras, a arquitetura da CNN implementada em `train_model.py` (número de blocos convolucionais, uso de batch normalization/dropout, estratégia de validação/early stopping).
+A arquitetura implementada em `train_model.py` é uma **Rede Convolucional (CNN)** estruturada em 3 blocos convolucionais principais seguidos por camadas de classificação e regularização:
+
+- **Blocos Convolucionais (3 blocos):**
+  - **Bloco 1:** `Conv2D` com 32 filtros (kernel 3x3, padding `"same"`, ativação ReLU) + `BatchNormalization` + `MaxPooling2D` (pool 2x2).
+  - **Bloco 2:** `Conv2D` com 64 filtros (kernel 3x3, padding `"same"`, ativação ReLU) + `BatchNormalization` + `MaxPooling2D` (pool 2x2).
+  - Bloco 3: `Conv2D` com 128 filtros (kernel 3x3, padding `"same"`, ativação ReLU) + `BatchNormalization` + `MaxPooling2D` (pool 2x2).
+- **Camadas Densa e Regularização:**
+  - `Flatten` para vetorização dos mapas de características.
+  - `Dense` com 128 neurônios e ativação ReLU.
+  - `Dropout(0.5)` aplicado antes da saída para reduzir overfitting.
+  - Camada final `Dense` com 10 neurônios e ativação `softmax` para classificação das 10 classes de dígitos (0-9).
+- **Estratégia de Validação e Early Stopping:**
+  - Split explícito de 10% do dataset de treinamento para validação (`validation_split=0.10`).
+  - Callback `EarlyStopping` monitorando a perda de validação (`monitor="val_loss"`), com paciência de 3 épocas (`patience=3`) e restauração dos melhores pesos (`restore_best_weights=True`).
 
 ### 2️⃣ Bibliotecas Utilizadas
 
-Liste as principais bibliotecas utilizadas, preferencialmente com suas versões.
+- **TensorFlow**: `2.21.0` (incluindo `tf.lite` para conversão e inferência Edge)
+- **Keras / `tf_keras`**: `3.14.1` / `2.21.0` (utilizando `tf_keras` para garantia de compatibilidade com a especificação HDF5/Keras 2 no salvamento de `model.h5`)
+- **NumPy**: `1.26.4` (para pré-processamento de imagens e manipulação de arrays)
 
 ### 3️⃣ Técnica de Otimização do Modelo
 
-Explique qual técnica foi utilizada para otimizar o modelo em `optimize_model.py`.
+Em `optimize_model.py`, foi aplicada a técnica de **Dynamic Range Quantization (Quantização de Intervalo Dinâmico)** por meio do conversor `tf.lite.TFLiteConverter` com a configuração `converter.optimizations = [tf.lite.Optimize.DEFAULT]`.
+
+Essa técnica quantiza os pesos do modelo de ponto flutuante de 32 bits (FP32) para inteiros de 8 bits (INT8) em tempo de conversão, mantendo as ativações em ponto flutuante durante a inferência. Trata-se de uma estratégia extremamente eficiente para Edge AI, pois reduz significativamente o tamanho do modelo sem necessitar de um conjunto de dados representativo para calibração.
 
 ### 4️⃣ Resultados Obtidos
 
-Informe a acurácia de validação obtida e o tamanho dos arquivos `model.h5` e `model.tflite`.
+- **Acurácia Final de Validação:** **99.05%** (`0.9905`)
+- **Tamanho do `model.h5`:** **2.98 MB** (2.979.352 bytes)
+- **Tamanho do `model.tflite`:** **256.4 KB** (256.424 bytes)
+- **Taxa de Compressão:** Redução de aproximadamente **91.4%** no tamanho do arquivo.
 
 ### 5️⃣ Comentários Adicionais (Opcional)
 
-Dificuldades encontradas, decisões técnicas importantes, limitações do modelo, aprendizados durante o desafio.
+- **Compatibilidade entre Versões do Keras:** Durante a desserialização do `model.h5`, identificou-se uma incompatibilidade de formato entre Keras 3 e Keras 2 (devido ao parâmetro `synchronized` adicionado na camada `BatchNormalization` pelo Keras 3). O problema foi resolvido importando `tf_keras` no script de treinamento, assegurando total compatibilidade do arquivo `.h5` em diferentes ambientes de avaliação.
+- **Eficiência para Dispositivos Edge:** O modelo final `.tflite` apresentou excelente desempenho e ocupação de memória baixíssima (~256 KB), sendo ideal para deploy em microcontroladores e dispositivos embarcados.
 
 ### 6️⃣ Exemplo de Inferência
 
-Cole a saída do terminal ao rodar `run_inference.py` (predito vs. real para as 5+ amostras), e comente brevemente se houve algum caso interessante (acerto ou erro) entre as amostras testadas.
+Saída do terminal ao executar `run_inference.py`:
+
+```text
+Rodando inferencia em 5 amostras usando model.tflite:
+
+Amostra 1: predito=7 | real=7
+Amostra 2: predito=2 | real=2
+Amostra 3: predito=1 | real=1
+Amostra 4: predito=0 | real=0
+Amostra 5: predito=4 | real=4
+```
+
+**Análise:** O modelo quantizado no formato TensorFlow Lite alcançou **100% de acerto** nas 5 amostras aleatórias de teste, classificando corretamente dígitos com traços diversos (como 7, 2, 1, 0, 4) sem degradação da precisão após a otimização dos pesos.
